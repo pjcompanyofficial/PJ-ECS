@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>PJ-ECC | Secure Portal</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="manifest" href="manifest.json">
+    <script src="https://unpkg.com/html5-qrcode"></script>
+</head>
+<body>
+    <div class="background-overlay"></div>
+    
+    <div class="container">
+        <header>
+            <span class="logo-text">PJ-ECC</span>
+            <span class="tagline">EMPLOYMENT VERIFICATION</span>
+        </header>
+
+        <main id="main-portal">
+            <section id="status-initial">
+                <div class="result-card" style="padding: 20px; background: rgba(255,255,255,0.05);">
+                    <p style="letter-spacing: 2px; color: var(--secondary-color);">● SYSTEM ONLINE</p>
+                    <p style="font-size: 0.9em; opacity: 0.7;">Ready for Secure Verification</p>
+                </div>
+            </section>
+
+            <section id="verified-display" class="hidden">
+                <div class="result-card">
+                    <div class="card-header">
+                        <span>VERIFIED PROFILE</span>
+                        <span id="cardRefHeader">REF-000</span>
+                    </div>
+                    <div class="card-body">
+                        <div class="detail-item">
+                            <span class="label">Employee Name</span>
+                            <p id="dispName" class="value">---</p>
+                        </div>
+                        <div class="detail-item">
+                            <span class="label">Joining Date</span>
+                            <p id="dispDate" class="value">---</p>
+                        </div>
+                        <div class="detail-item">
+                            <span class="label">Work Address</span>
+                            <p id="dispAddr" class="value">---</p>
+                        </div>
+                        <div class="detail-item">
+                            <span class="label">Reference ID</span>
+                            <p id="dispRef" class="value" style="color: var(--primary-color);">---</p>
+                        </div>
+                    </div>
+                    <div class="card-footer" style="padding: 10px 20px 20px;">
+                        <button onclick="location.reload()" class="btn btn-tertiary" style="padding: 12px;">NEW SCAN</button>
+                    </div>
+                </div>
+            </section>
+
+            <section id="scanner-screen" class="hidden">
+                <div id="reader-wrapper">
+                    <div id="reader"></div>
+                    <div class="scanner-frame"></div>
+                    <div class="scanner-line"></div>
+                </div>
+                <button onclick="location.reload()" class="btn btn-danger">CANCEL SCAN</button>
+            </section>
+        </main>
+
+        <div class="action-buttons" id="footer-actions">
+            <button onclick="startScanner()" class="btn btn-primary">START SCANNER</button>
+            <button onclick="adminGateway()" class="btn btn-tertiary">ADMIN LOGIN</button>
+        </div>
+    </div>
+
+    <script src="js/engine.js"></script>
+    <script>
+        function adminGateway() {
+            const pass = prompt("🔐 Enter Admin Access Key:");
+            if (pass === "sonu@jeet") {
+                // 404 Error Fix: Link to maker.html
+                window.location.href = "maker.html";
+            } else if (pass) {
+                alert("🚫 Unauthorized Access!");
+            }
+        }
+    </script>
+</body>
+</html>
