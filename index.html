@@ -1,87 +1,226 @@
-<!DOCTYPE html>
+<!doctype html>
+
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>PJ-ECC | Secure Portal</title>
-    <link rel="stylesheet" href="css/style.css">
-    <link rel="manifest" href="manifest.json">
-    <script src="https://unpkg.com/html5-qrcode"></script>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>3D Card Scanner — PJ</title>
+  <style>
+    :root{--card-w:360px;--card-h:220px}
+    html,body{height:100%;margin:0;background:#000;font-family:Inter,system-ui,Arial;color:#fff}
+    .stage{min-height:100vh;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:28px;padding:40px 20px}/* 3D card container */
+.card-wrap{perspective:1400px}
+.card{
+  width:var(--card-w);height:var(--card-h);border-radius:18px;position:relative;transform-style:preserve-3d;transition:transform 800ms cubic-bezier(.2,.9,.2,1);box-shadow:0 20px 60px rgba(0,0,0,.8), 0 6px 18px rgba(0,0,0,.6);
+  transform: rotateX(8deg) rotateY(-12deg);
+  cursor:grab;
+  -webkit-backface-visibility:hidden;backface-visibility:hidden;
+}
+
+/* Subtle slow spin animation */
+.card.auto-rotate{animation:float-rotate 10s linear infinite}
+@keyframes float-rotate{0%{transform:rotateX(8deg) rotateY(-12deg) rotateZ(0deg)}50%{transform:rotateX(8deg) rotateY(12deg) rotateZ(4deg)}100%{transform:rotateX(8deg) rotateY(-12deg) rotateZ(0deg)}}
+
+.face{position:absolute;inset:0;border-radius:18px;overflow:hidden;backface-visibility:hidden;display:flex;align-items:center;justify-content:center}
+.face img{width:100%;height:100%;object-fit:cover;display:block}
+
+.front{transform:translateZ(2px)}
+.back{transform:rotateY(180deg) translateZ(2px)}
+
+/* subtle glossy overlay */
+.gloss{position:absolute;inset:0;border-radius:18px;pointer-events:none;background:linear-gradient(180deg, rgba(255,255,255,0.05), rgba(255,255,255,0.01));mix-blend-mode:screen}
+
+/* scan button area */
+.controls{display:flex;gap:12px;align-items:center;flex-direction:column}
+.scan-btn{background:linear-gradient(90deg,#0ff,#5df);border:none;padding:12px 22px;border-radius:999px;font-weight:700;letter-spacing:.6px;cursor:pointer;box-shadow:0 6px 30px rgba(0,255,220,0.08);outline:none}
+.scan-btn:active{transform:translateY(1px)}
+
+.hint{font-size:13px;color:rgba(255,255,255,.6)}
+
+/* full-screen overlay for premium animation */
+#fxOverlay{position:fixed;inset:0;z-index:9999;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,0.7)}
+#fxOverlay .closeTip{position:absolute;top:18px;right:18px;color:#fff;opacity:.8}
+
+/* responsive tweaks */
+@media (max-width:520px){:root{--card-w:300px;--card-h:180px}}
+
+  </style>
 </head>
 <body>
-    <div class="background-overlay"></div>
-    
-    <div class="container">
-        <header>
-            <span class="logo-text">PJ-ECC</span>
-            <span class="tagline">EMPLOYMENT VERIFICATION</span>
-        </header>
-
-        <main id="main-portal">
-            <section id="status-initial">
-                <div class="result-card" style="padding: 20px; background: rgba(255,255,255,0.05);">
-                    <p style="letter-spacing: 2px; color: var(--secondary-color);">● SYSTEM ONLINE</p>
-                    <p style="font-size: 0.9em; opacity: 0.7;">Ready for Secure Verification</p>
-                </div>
-            </section>
-
-            <section id="verified-display" class="hidden">
-                <div class="result-card">
-                    <div class="card-header">
-                        <span>VERIFIED PROFILE</span>
-                        <span id="cardRefHeader">REF-000</span>
-                    </div>
-                    <div class="card-body">
-                        <div class="detail-item">
-                            <span class="label">Employee Name</span>
-                            <p id="dispName" class="value">---</p>
-                        </div>
-                        <div class="detail-item">
-                            <span class="label">Joining Date</span>
-                            <p id="dispDate" class="value">---</p>
-                        </div>
-                        <div class="detail-item">
-                            <span class="label">Work Address</span>
-                            <p id="dispAddr" class="value">---</p>
-                        </div>
-                        <div class="detail-item">
-                            <span class="label">Reference ID</span>
-                            <p id="dispRef" class="value" style="color: var(--primary-color);">---</p>
-                        </div>
-                    </div>
-                    <div class="card-footer" style="padding: 10px 20px 20px;">
-                        <button onclick="location.reload()" class="btn btn-tertiary" style="padding: 12px;">NEW SCAN</button>
-                    </div>
-                </div>
-            </section>
-
-            <section id="scanner-screen" class="hidden">
-                <div id="reader-wrapper">
-                    <div id="reader"></div>
-                    <div class="scanner-frame"></div>
-                    <div class="scanner-line"></div>
-                </div>
-                <button onclick="location.reload()" class="btn btn-danger">CANCEL SCAN</button>
-            </section>
-        </main>
-
-        <div class="action-buttons" id="footer-actions">
-            <button onclick="startScanner()" class="btn btn-primary">START SCANNER</button>
-            <button onclick="adminGateway()" class="btn btn-tertiary">ADMIN LOGIN</button>
+  <div class="stage">
+    <div class="card-wrap">
+      <div id="card" class="card auto-rotate" title="Drag to rotate">
+        <div class="face front">
+          <img src="https://i.postimg.cc/7Yrj1S2J/Screenshot-20260222-060831-Gallery.jpg" alt="card front" />
+          <div class="gloss"></div>
         </div>
-    </div>
+        <div class="face back">
+          <img src="https://i.postimg.cc/1zdj8FSZ/Screenshot-20260222-060817-Gallery-2.jpg" alt="card back" />
+          <div class="gloss"></div>
+        </div>
+      </div>
+    </div><div class="controls">
+  <button id="scanBtn" class="scan-btn">Scan / Premium Animation</button>
+  <div class="hint">Click scan to play a premium 3D animation (7s) — then you'll be redirected.</div>
+</div>
 
-    <script src="js/engine.js"></script>
-    <script>
-        function adminGateway() {
-            const pass = prompt("🔐 Enter Admin Access Key:");
-            if (pass === "sonu@jeet") {
-                // 404 Error Fix: Link to maker.html
-                window.location.href = "maker.html";
-            } else if (pass) {
-                alert("🚫 Unauthorized Access!");
-            }
+  </div>  <!-- Fullscreen three.js canvas overlay -->  <div id="fxOverlay">
+    <div id="fxClose" class="closeTip">Playing animation…</div>
+    <canvas id="fxCanvas"></canvas>
+  </div>  <!-- three.js CDN -->  <script src="https://unpkg.com/three@0.150.1/build/three.min.js"></script>  <script>
+    // ---------- Card drag/tilt interaction ----------
+    (function(){
+      const card = document.getElementById('card');
+      let isDown=false, startX=0, startY=0, rotX=8, rotY=-12;
+      card.addEventListener('pointerdown', e=>{
+        isDown=true; card.classList.remove('auto-rotate'); card.style.cursor='grabbing'; startX=e.clientX; startY=e.clientY;
+      });
+      window.addEventListener('pointermove', e=>{
+        if(!isDown) return;
+        const dx = e.clientX - startX; const dy = e.clientY - startY;
+        const newY = rotY + dx*0.12; const newX = rotX - dy*0.12;
+        card.style.transform = `rotateX(${newX}deg) rotateY(${newY}deg)`;
+      });
+      window.addEventListener('pointerup', e=>{
+        if(!isDown) return; isDown=false; card.style.cursor='grab'; // keep last rotation
+        const computed = getComputedStyle(card).transform;
+        // do not compute matrix fallback; just re-enable float rotate after short delay
+        setTimeout(()=>card.classList.add('auto-rotate'), 1800);
+      });
+      // small parallax on mousemove
+      window.addEventListener('mousemove', e=>{
+        const cx = window.innerWidth/2, cy = window.innerHeight/2; const rx = (cy - e.clientY)/40; const ry = (e.clientX - cx)/40;
+        if(!isDown) card.style.transform = `rotateX(${8+rx}deg) rotateY(${-12+ry}deg)`;
+      });
+    })();
+
+    // ---------- Three.js premium animation overlay ----------
+    (function(){
+      const overlay = document.getElementById('fxOverlay');
+      const canvas = document.getElementById('fxCanvas');
+      const btn = document.getElementById('scanBtn');
+      const redirectUrl = 'https://pjcompanyofficial.github.io/PJ.COM/';
+
+      let renderer, scene, camera, particles, beam, startTime;
+      let running=false;
+
+      function initThree(){
+        renderer = new THREE.WebGLRenderer({canvas:canvas,antialias:true,alpha:true});
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio,2));
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        scene = new THREE.Scene();
+        camera = new THREE.PerspectiveCamera(45, window.innerWidth/window.innerHeight, 0.1, 1000);
+        camera.position.set(0,0,60);
+
+        // soft ambient + point
+        scene.add(new THREE.AmbientLight(0xffffff,0.4));
+        const p = new THREE.PointLight(0x8ff4ff,1.2,300); p.position.set(50,50,50); scene.add(p);
+
+        // particles cloud
+        const count = 1800;
+        const geo = new THREE.BufferGeometry();
+        const pos = new Float32Array(count*3);
+        for(let i=0;i<count;i++){
+          const r = 8 + Math.random()*28;
+          const theta = Math.random()*Math.PI*2;
+          const phi = Math.acos(2*Math.random()-1);
+          pos[i*3+0] = r*Math.sin(phi)*Math.cos(theta);
+          pos[i*3+1] = r*Math.sin(phi)*Math.sin(theta);
+          pos[i*3+2] = r*Math.cos(phi);
         }
-    </script>
-</body>
+        geo.setAttribute('position', new THREE.BufferAttribute(pos,3));
+        const mat = new THREE.PointsMaterial({size:0.6,transparent:true,opacity:0.9,depthWrite:false});
+        // color assigned in vertex shader alternative: set single color and tweak in render
+        mat.color = new THREE.Color(0x00ffe1);
+        particles = new THREE.Points(geo,mat);
+        scene.add(particles);
+
+        // scan beam (thin plane with additive transparent material)
+        const beamGeo = new THREE.PlaneGeometry(40,8,1,1);
+        const beamMat = new THREE.MeshBasicMaterial({color:0x00ffd7,transparent:true,opacity:0.0,blending:THREE.AdditiveBlending,depthWrite:false});
+        beam = new THREE.Mesh(beamGeo,beamMat);
+        beam.position.set(0,0,0);
+        beam.rotation.x = -0.3;
+        beam.scale.set(1,0.01,1);
+        scene.add(beam);
+
+        // ring at center
+        const ringGeo = new THREE.RingGeometry(2.5,4.5,64);
+        const ringMat = new THREE.MeshBasicMaterial({color:0x00ffd7,transparent:true,opacity:0.0,side:THREE.DoubleSide,blending:THREE.AdditiveBlending});
+        const ring = new THREE.Mesh(ringGeo,ringMat); ring.rotation.x = -0.4; ring.position.z = -2; scene.add(ring);
+
+        // subtle fog
+        scene.fog = new THREE.FogExp2(0x000000, 0.01);
+
+        window.addEventListener('resize', onResize);
+
+        // animate initial intro timeline manually via startTime
+      }
+
+      function onResize(){
+        if(!renderer) return; camera.aspect = window.innerWidth/window.innerHeight; camera.updateProjectionMatrix(); renderer.setSize(window.innerWidth, window.innerHeight);
+      }
+
+      function playAnimation(duration=7000){
+        if(running) return; running=true; overlay.style.display='flex';
+        if(!renderer) initThree();
+        startTime = performance.now();
+        // kickoff render loop
+        requestAnimationFrame(loop);
+        // safety fallback redirect if animation not completed
+        setTimeout(()=>{ if(running) finishAndRedirect(); }, duration+120);
+      }
+
+      function loop(t){
+        if(!running) return;
+        const elapsed = t - startTime;
+        const pct = Math.min(elapsed/7000,1);
+
+        // animate particles rotation and brightness
+        particles.rotation.y = elapsed*0.0006;
+        particles.material.size = 0.6 + Math.sin(elapsed*0.004)*0.35;
+        particles.material.opacity = 0.25 + pct*0.9;
+
+        // beam grows and pulses
+        beam.material.opacity = Math.sin(pct*Math.PI)*0.65;
+        beam.scale.y = 0.01 + Math.sin(elapsed*0.009)*0.2 + pct*0.9;
+        beam.position.y = Math.sin(elapsed*0.006)*6*(1-pct);
+
+        // camera slight dolly
+        camera.position.z = 60 - pct*26;
+        camera.lookAt(0,0,0);
+
+        renderer.render(scene,camera);
+
+        if(pct < 1) requestAnimationFrame(loop);
+        else finishAndRedirect();
+      }
+
+      function finishAndRedirect(){
+        running=false;
+        // fade out overlay smoothly then redirect
+        overlay.style.transition='opacity 650ms ease'; overlay.style.opacity='1';
+        overlay.style.opacity='0';
+        setTimeout(()=>{ overlay.style.display='none'; overlay.style.opacity='1'; window.location.href = redirectUrl; }, 650);
+      }
+
+      // button wiring
+      btn.addEventListener('click', ()=>{
+        playAnimation(7000);
+      });
+
+      // accessible keyboard trigger
+      btn.addEventListener('keyup', e=>{ if(e.key === 'Enter' || e.key === ' ') playAnimation(7000); });
+
+      // fallback if WebGL not available: show simple CSS effect then redirect
+      if(!THREE.WEBGL || !THREE.WEBGL.isWebGLAvailable()){
+        btn.addEventListener('click', ()=>{
+          // CSS fallback
+          const body = document.body; body.style.transition='background 700ms'; body.style.background='#000';
+          setTimeout(()=> window.location.href = redirectUrl, 900);
+        });
+      }
+
+    })();
+  </script></body>
 </html>
