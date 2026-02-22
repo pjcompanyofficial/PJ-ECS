@@ -37,25 +37,48 @@ body{background:#000;overflow:hidden;font-family:sans-serif;color:#fff}
   font-weight:bold;cursor:pointer
 }
 
-/* scan effect */
+/* BIG QR SCAN AREA */
 .scan-box{
   position:absolute;
-  width:120px;height:120px;
-  border:2px solid orange;
-  top:50%;left:50%;
+  width:180px;
+  height:180px;
+  border:3px solid orange;
+  border-radius:12px;
+  top:52%;
+  left:63%;
   transform:translate(-50%,-50%);
   display:none;
-  box-shadow:0 0 20px orange;
+  box-shadow:0 0 25px orange, inset 0 0 15px orange;
 }
 
+/* scanning line */
 .scan-line{
-  position:absolute;width:100%;height:3px;background:orange;
-  animation:scanMove 2s linear infinite
+  position:absolute;
+  width:100%;
+  height:6px; /* thicker */
+  background:linear-gradient(90deg,transparent,orange,transparent);
+  animation:scanMove 1.5s linear infinite;
+}
+
+/* 3D pulse effect */
+.scan-box::before{
+  content:"";
+  position:absolute;
+  width:100%;
+  height:100%;
+  border:2px solid orange;
+  border-radius:12px;
+  animation:pulse 1.5s infinite;
 }
 
 @keyframes scanMove{
   0%{top:0}
   100%{top:100%}
+}
+
+@keyframes pulse{
+  0%{transform:scale(1);opacity:0.8}
+  100%{transform:scale(1.2);opacity:0}
 }
 
 </style></head><body>
@@ -135,7 +158,7 @@ card.addEventListener("touchmove",e=>{
 
 card.addEventListener("touchend",()=>{isDown=false});
 
-/* auto rotate + inertia */
+/* inertia + auto rotate */
 function animate(){
   if(!isDown){
     rotY+=velocityX*0.02;
@@ -144,7 +167,7 @@ function animate(){
     velocityX*=0.95;
     velocityY*=0.95;
 
-    rotY+=0.05; // slow auto rotate
+    rotY+=0.05;
     update();
   }
   requestAnimationFrame(animate);
@@ -154,23 +177,21 @@ animate();
 /* scan */
 function startScan(){
 
-  // decide nearest side
   let currentY=rotY%360;
   if(currentY<0) currentY+=360;
 
-  // flip to back if needed
   if(currentY<90 || currentY>270){
     rotY+=180;
   }
   update();
 
-  // show scan
   setTimeout(()=>{
     document.getElementById("scanBox").style.display="block";
   },500);
 
-  // redirect
+  // stop scan after 7 sec
   setTimeout(()=>{
+    document.getElementById("scanBox").style.display="none";
     window.location.href="https://pjcompanyofficial.github.io/PJ.COM/";
   },7000);
 }
