@@ -4,223 +4,261 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>3D Card Scanner — PJ</title>
+  <title>3D Card Scanner — PJ (Enhanced Animation)</title>
   <style>
     :root{--card-w:360px;--card-h:220px}
-    html,body{height:100%;margin:0;background:#000;font-family:Inter,system-ui,Arial;color:#fff}
-    .stage{min-height:100vh;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:28px;padding:40px 20px}/* 3D card container */
-.card-wrap{perspective:1400px}
-.card{
-  width:var(--card-w);height:var(--card-h);border-radius:18px;position:relative;transform-style:preserve-3d;transition:transform 800ms cubic-bezier(.2,.9,.2,1);box-shadow:0 20px 60px rgba(0,0,0,.8), 0 6px 18px rgba(0,0,0,.6);
-  transform: rotateX(8deg) rotateY(-12deg);
-  cursor:grab;
-  -webkit-backface-visibility:hidden;backface-visibility:hidden;
-}
+    html,body{height:100%;margin:0;background:#000;font-family:Inter,system-ui,Arial;color:#fff;overflow:hidden}/* Stage & background */
+.stage{position:relative;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:40px}
+/* 2D animated background (SVG) behind the card */
+.back-svg{position:absolute;inset:0;pointer-events:none;z-index:1}
 
-/* Subtle slow spin animation */
-.card.auto-rotate{animation:float-rotate 10s linear infinite}
-@keyframes float-rotate{0%{transform:rotateX(8deg) rotateY(-12deg) rotateZ(0deg)}50%{transform:rotateX(8deg) rotateY(12deg) rotateZ(4deg)}100%{transform:rotateX(8deg) rotateY(-12deg) rotateZ(0deg)}}
+/* 3D card container */
+.card-wrap{position:relative;z-index:3;perspective:1600px;display:flex;flex-direction:column;align-items:center;gap:16px}
+.card{width:var(--card-w);height:var(--card-h);border-radius:18px;position:relative;transform-style:preserve-3d;transition:transform 900ms cubic-bezier(.2,.9,.2,1);box-shadow:0 30px 80px rgba(0,0,0,.8);
+  transform: rotateX(6deg) rotateY(-10deg);
+  cursor:grab;outline:none}
+.card.auto-rotate{animation:cardFloat 14s linear infinite}
+@keyframes cardFloat{0%{transform:rotateX(6deg) rotateY(-10deg) translateY(-6px)}50%{transform:rotateX(8deg) rotateY(10deg) translateY(6px)}100%{transform:rotateX(6deg) rotateY(-10deg) translateY(-6px)}}
 
 .face{position:absolute;inset:0;border-radius:18px;overflow:hidden;backface-visibility:hidden;display:flex;align-items:center;justify-content:center}
 .face img{width:100%;height:100%;object-fit:cover;display:block}
-
 .front{transform:translateZ(2px)}
-.back{transform:rotateY(180deg) translateZ(2px)}
+.back{transform:rotateY(180deg) translateZ(2px);}
 
-/* subtle glossy overlay */
-.gloss{position:absolute;inset:0;border-radius:18px;pointer-events:none;background:linear-gradient(180deg, rgba(255,255,255,0.05), rgba(255,255,255,0.01));mix-blend-mode:screen}
+/* makes the card feel layered with subtle depth */
+.card::before{content:'';position:absolute;inset:0;border-radius:18px;box-shadow:inset 0 1px 0 rgba(255,255,255,0.02), 0 6px 40px rgba(0,0,0,0.6);pointer-events:none}
 
-/* scan button area */
-.controls{display:flex;gap:12px;align-items:center;flex-direction:column}
-.scan-btn{background:linear-gradient(90deg,#0ff,#5df);border:none;padding:12px 22px;border-radius:999px;font-weight:700;letter-spacing:.6px;cursor:pointer;box-shadow:0 6px 30px rgba(0,255,220,0.08);outline:none}
+/* controls */
+.controls{display:flex;gap:12px;align-items:center;flex-direction:column;z-index:4}
+.scan-btn{background:linear-gradient(90deg,#ff8a00,#ff4e00);border:none;padding:12px 22px;border-radius:999px;font-weight:700;letter-spacing:.6px;cursor:pointer;box-shadow:0 10px 40px rgba(255,110,40,0.12);outline:none}
 .scan-btn:active{transform:translateY(1px)}
+.hint{font-size:13px;color:rgba(255,255,255,.65);max-width:340px;text-align:center}
 
-.hint{font-size:13px;color:rgba(255,255,255,.6)}
+/* overlay for premium animation */
+#fxOverlay{position:fixed;inset:0;z-index:9999;display:none;align-items:center;justify-content:center;background:linear-gradient(180deg, rgba(0,0,0,0.85), rgba(0,0,0,0.95))}
+#fxCanvasFull{width:100%;height:100%}
 
-/* full-screen overlay for premium animation */
-#fxOverlay{position:fixed;inset:0;z-index:9999;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,0.7)}
-#fxOverlay .closeTip{position:absolute;top:18px;right:18px;color:#fff;opacity:.8}
+/* QR micro-canvas (for 3D orange search effect) - will be positioned relative to card */
+.qr-canvas{position:absolute;pointer-events:none;z-index:6;display:none}
 
-/* responsive tweaks */
+/* flower style (2D with pseudo-3D) */
+.flower{filter:drop-shadow(0 10px 20px rgba(0,0,0,0.6));}
+
 @media (max-width:520px){:root{--card-w:300px;--card-h:180px}}
 
   </style>
 </head>
 <body>
   <div class="stage">
-    <div class="card-wrap">
-      <div id="card" class="card auto-rotate" title="Drag to rotate">
-        <div class="face front">
-          <img src="https://i.postimg.cc/7Yrj1S2J/Screenshot-20260222-060831-Gallery.jpg" alt="card front" />
-          <div class="gloss"></div>
-        </div>
-        <div class="face back">
-          <img src="https://i.postimg.cc/1zdj8FSZ/Screenshot-20260222-060817-Gallery-2.jpg" alt="card back" />
-          <div class="gloss"></div>
-        </div>
-      </div>
-    </div><div class="controls">
-  <button id="scanBtn" class="scan-btn">Scan / Premium Animation</button>
-  <div class="hint">Click scan to play a premium 3D animation (7s) — then you'll be redirected.</div>
+    <!-- SVG background anim: branches -> leaves -> flowers (will animate on scan) -->
+    <svg class="back-svg" viewBox="0 0 1200 800" preserveAspectRatio="xMidYMid slice">
+      <defs>
+        <linearGradient id="leafGrad" x1="0" x2="1">
+          <stop offset="0%" stop-color="#2ee07a" stop-opacity="0.95" />
+          <stop offset="100%" stop-color="#00c2a8" stop-opacity="0.95" />
+        </linearGradient>
+        <filter id="softGlow"><feGaussianBlur stdDeviation="8" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+      </defs><!-- multiple branches - hidden initially -->
+  <g id="branches" stroke="#7a4f2a" stroke-width="2.2" fill="none" stroke-linecap="round" stroke-linejoin="round" opacity="0">
+    <path id="b1" d="M600 680 C560 620 520 540 500 480 C480 420 440 360 400 320"/>
+    <path id="b2" d="M620 680 C660 620 700 540 740 480 C780 420 820 360 860 340"/>
+    <path id="b3" d="M560 720 C540 660 520 600 500 560 C480 520 460 480 420 460"/>
+  </g>
+
+  <!-- leaf clusters (hidden) -->
+  <g id="leaves" opacity="0">
+    <!-- many small leaves placed along branches -->
+    <g transform="translate(470,440) rotate(-12)"><ellipse rx="8" ry="4" fill="url(#leafGrad)" /></g>
+    <g transform="translate(520,400) rotate(-30)"><ellipse rx="9" ry="4.5" fill="url(#leafGrad)" /></g>
+    <g transform="translate(580,360) rotate(-20)"><ellipse rx="10" ry="5" fill="url(#leafGrad)" /></g>
+    <g transform="translate(680,420) rotate(12)"><ellipse rx="9" ry="4.2" fill="url(#leafGrad)" /></g>
+    <g transform="translate(740,380) rotate(24)"><ellipse rx="8" ry="4" fill="url(#leafGrad)" /></g>
+    <g transform="translate(820,350) rotate(40)"><ellipse rx="9" ry="4.5" fill="url(#leafGrad)" /></g>
+  </g>
+
+  <!-- flowers (start scaled 0) with layered petals to simulate 3D -->
+  <g id="flowers" opacity="0" filter="url(#softGlow)">
+    <!-- flower example -->
+    <g id="f1" transform="translate(520,320) scale(0)" class="flower">
+      <g transform="translate(0,0)">
+        <g style="transform-origin:0 0;">
+          <ellipse rx="6" ry="18" fill="#ffd3c2" transform="rotate(0) translate(0,-6)" opacity="0.95"/>
+          <ellipse rx="6" ry="18" fill="#ffb3a1" transform="rotate(45) translate(0,-6)" opacity="0.95"/>
+          <ellipse rx="6" ry="18" fill="#ffa08a" transform="rotate(90) translate(0,-6)" opacity="0.95"/>
+        </g>
+        <circle r="5" fill="#ff6a00"/>
+      </g>
+    </g>
+
+    <g id="f2" transform="translate(700,360) scale(0)" class="flower">
+      <g>
+        <ellipse rx="7" ry="20" fill="#ffe6d6" transform="rotate(10) translate(0,-6)" opacity="0.95"/>
+        <ellipse rx="7" ry="20" fill="#ffcaa8" transform="rotate(50) translate(0,-6)" opacity="0.95"/>
+        <ellipse rx="7" ry="20" fill="#ffb38b" transform="rotate(100) translate(0,-6)" opacity="0.95"/>
+        <circle r="6" fill="#ff7a1a"/>
+      </g>
+    </g>
+  </g>
+</svg>
+
+<div class="card-wrap">
+  <div id="card" class="card auto-rotate" tabindex="0" aria-label="3D rotating card">
+    <div class="face front">
+      <img id="frontImg" src="https://i.postimg.cc/7Yrj1S2J/Screenshot-20260222-060831-Gallery.jpg" alt="card front" />
+    </div>
+    <div class="face back">
+      <img id="backImg" src="https://i.postimg.cc/1zdj8FSZ/Screenshot-20260222-060817-Gallery-2.jpg" alt="card back" />
+      <!-- small indicator where QR is on back (used to position 3D search) -->
+      <div id="qrAnchor" style="position:absolute;right:18%;bottom:14%;width:78px;height:78px;border-radius:6px;box-shadow:0 6px 18px rgba(0,0,0,0.6);pointer-events:none;opacity:0;border:2px dashed rgba(255,255,255,0.02)"></div>
+    </div>
+  </div>
+
+  <div class="controls">
+    <button id="scanBtn" class="scan-btn">Scan / Premium Animation</button>
+    <div class="hint">Click scan — branches will grow, leaves & flowers will appear (2D → 3D feel), then the card flips to back and an orange 3D search will scan the QR. Smooth auto-rotate and drag-rotate supported.</div>
+  </div>
 </div>
 
-  </div>  <!-- Fullscreen three.js canvas overlay -->  <div id="fxOverlay">
-    <div id="fxClose" class="closeTip">Playing animation…</div>
-    <canvas id="fxCanvas"></canvas>
-  </div>  <!-- three.js CDN -->  <script src="https://unpkg.com/three@0.150.1/build/three.min.js"></script>  <script>
-    // ---------- Card drag/tilt interaction ----------
+<!-- small canvas that will be positioned over the QR area for 3D orange search animation -->
+<canvas id="qrCanvas" class="qr-canvas"></canvas>
+
+<!-- Fullscreen overlay (fallback) if needed -->
+<div id="fxOverlay"><canvas id="fxCanvasFull"></canvas></div>
+
+  </div>  <!-- three.js for QR 3D search effect -->  <script src="https://unpkg.com/three@0.150.1/build/three.min.js"></script>  <script>
+    // ---------- Helper: query SVG groups for animation ----------
+    const branches = document.getElementById('branches');
+    const bPaths = [document.getElementById('b1'),document.getElementById('b2'),document.getElementById('b3')];
+    const leaves = document.getElementById('leaves');
+    const flowers = document.getElementById('flowers');
+    const f1 = document.getElementById('f1'); const f2 = document.getElementById('f2');
+
+    // ---------- Card drag/tilt with flip detection ----------
     (function(){
       const card = document.getElementById('card');
-      let isDown=false, startX=0, startY=0, rotX=8, rotY=-12;
+      let isDown=false, startX=0, startY=0, rotX=6, rotY=-10, currY=-10;
+      let auto = true;
+
+      function applyRot(x,y){ card.style.transform = `rotateX(${x}deg) rotateY(${y}deg)`; }
       card.addEventListener('pointerdown', e=>{
-        isDown=true; card.classList.remove('auto-rotate'); card.style.cursor='grabbing'; startX=e.clientX; startY=e.clientY;
+        isDown=true; auto=false; card.classList.remove('auto-rotate'); card.style.cursor='grabbing'; startX=e.clientX; startY=e.clientY;
       });
-      window.addEventListener('pointermove', e=>{
-        if(!isDown) return;
-        const dx = e.clientX - startX; const dy = e.clientY - startY;
-        const newY = rotY + dx*0.12; const newX = rotX - dy*0.12;
-        card.style.transform = `rotateX(${newX}deg) rotateY(${newY}deg)`;
+      window.addEventListener('pointermove', e=>{ if(!isDown) return; const dx = e.clientX - startX; const dy = e.clientY - startY; currY = rotY + dx*0.12; rotX = 6 - dy*0.12; applyRot(rotX,currY); checkFlip(currY);
       });
-      window.addEventListener('pointerup', e=>{
-        if(!isDown) return; isDown=false; card.style.cursor='grab'; // keep last rotation
-        const computed = getComputedStyle(card).transform;
-        // do not compute matrix fallback; just re-enable float rotate after short delay
-        setTimeout(()=>card.classList.add('auto-rotate'), 1800);
-      });
-      // small parallax on mousemove
-      window.addEventListener('mousemove', e=>{
-        const cx = window.innerWidth/2, cy = window.innerHeight/2; const rx = (cy - e.clientY)/40; const ry = (e.clientX - cx)/40;
-        if(!isDown) card.style.transform = `rotateX(${8+rx}deg) rotateY(${-12+ry}deg)`;
-      });
+      window.addEventListener('pointerup', e=>{ if(!isDown) return; isDown=false; card.style.cursor='grab'; setTimeout(()=>{ if(!isDown) { auto=true; card.classList.add('auto-rotate'); } },1500); });
+
+      // mousemove subtle idle
+      window.addEventListener('mousemove', e=>{ if(isDown) return; const cx = window.innerWidth/2, cy = window.innerHeight/2; const rx = (cy - e.clientY)/60; const ry = (e.clientX - cx)/60; if(auto) applyRot(6+rx,-10+ry); });
+
+      // auto-rotation slow: we keep CSS animation but also ensure consistent 'flip' show/hide
+      function checkFlip(ydeg){ // when rotateY passes 90 or -90, faces will swap visually; we adjust backface visibility already present
+        // nothing else needed because faces are real back/ front via rotateY(180deg)
+      }
     })();
 
-    // ---------- Three.js premium animation overlay ----------
+    // ---------- Animate branches/leaves/flowers on scan ----------
+    function animateBotanicals(){
+      // reveal branches with stroke drawing
+      branches.style.opacity = 1;
+      bPaths.forEach((p, i)=>{
+        const len = p.getTotalLength();
+        p.style.strokeDasharray = len; p.style.strokeDashoffset = len; p.style.transition = `stroke-dashoffset ${1200 + i*300}ms ease-out ${i*120}ms, opacity 200ms linear`;
+        p.style.opacity = 1; setTimeout(()=> p.style.strokeDashoffset = '0', 80);
+      });
+      // leaves fade/scale in
+      leaves.style.transition = 'opacity 700ms ease-out 900ms'; leaves.style.opacity=1;
+      // flowers pop with scale and layered transforms to simulate 3D depth
+      flowers.style.opacity = 1;
+      [f1,f2].forEach((g,idx)=>{
+        g.style.transition = `transform 700ms cubic-bezier(.2,.9,.2,1) ${1200 + idx*220}ms, opacity 500ms ${1200+idx*220}ms`;
+        g.style.transform = g.getAttribute('transform').replace('scale(0)','scale(1)');
+        g.style.opacity = 1;
+        // small tilt to fake 3D
+        g.querySelectorAll('ellipse').forEach((el,ei)=> el.style.transform = `translateZ(${ei*2}px)`);
+      });
+    }
+
+    // ---------- QR 3D searching effect (Three.js) ----------
     (function(){
-      const overlay = document.getElementById('fxOverlay');
-      const canvas = document.getElementById('fxCanvas');
-      const btn = document.getElementById('scanBtn');
-      const redirectUrl = 'https://pjcompanyofficial.github.io/PJ.COM/';
+      const canvas = document.getElementById('qrCanvas');
+      const qrAnchor = document.getElementById('qrAnchor');
+      const card = document.getElementById('card');
+      let renderer, scene, camera, torus, light, animId;
 
-      let renderer, scene, camera, particles, beam, startTime;
-      let running=false;
+      function setupThree(){
+        renderer = new THREE.WebGLRenderer({canvas:canvas,alpha:true,antialias:true}); renderer.setPixelRatio(Math.min(window.devicePixelRatio,2));
+        scene = new THREE.Scene(); camera = new THREE.PerspectiveCamera(45,1,0.1,200); camera.position.set(0,0,40);
+        light = new THREE.PointLight(0xffa54a,1.2,200); light.position.set(20,20,40); scene.add(light);
 
-      function initThree(){
-        renderer = new THREE.WebGLRenderer({canvas:canvas,antialias:true,alpha:true});
-        renderer.setPixelRatio(Math.min(window.devicePixelRatio,2));
-        renderer.setSize(window.innerWidth, window.innerHeight);
-        scene = new THREE.Scene();
-        camera = new THREE.PerspectiveCamera(45, window.innerWidth/window.innerHeight, 0.1, 1000);
-        camera.position.set(0,0,60);
+        const geom = new THREE.TorusGeometry(9,1.6,24,60);
+        const mat = new THREE.MeshStandardMaterial({color:0xff8a00,emissive:0xff6a00,metalness:0.2,roughness:0.3});
+        torus = new THREE.Mesh(geom,mat); torus.rotation.x = Math.PI/2; torus.scale.set(0.01,0.01,0.01); scene.add(torus);
 
-        // soft ambient + point
-        scene.add(new THREE.AmbientLight(0xffffff,0.4));
-        const p = new THREE.PointLight(0x8ff4ff,1.2,300); p.position.set(50,50,50); scene.add(p);
+        const inner = new THREE.Mesh(new THREE.CircleGeometry(6,64), new THREE.MeshBasicMaterial({color:0xffb380,transparent:true,opacity:0.06})); inner.rotation.x = -0.5; inner.position.z = -2; scene.add(inner);
 
-        // particles cloud
-        const count = 1800;
-        const geo = new THREE.BufferGeometry();
-        const pos = new Float32Array(count*3);
-        for(let i=0;i<count;i++){
-          const r = 8 + Math.random()*28;
-          const theta = Math.random()*Math.PI*2;
-          const phi = Math.acos(2*Math.random()-1);
-          pos[i*3+0] = r*Math.sin(phi)*Math.cos(theta);
-          pos[i*3+1] = r*Math.sin(phi)*Math.sin(theta);
-          pos[i*3+2] = r*Math.cos(phi);
+        // small moving spotlight
+        const spot = new THREE.Mesh(new THREE.SphereGeometry(1.2,16,12), new THREE.MeshBasicMaterial({color:0xffb14a})); spot.position.set(0,7,8); scene.add(spot);
+
+        resize();
+      }
+
+      function resize(){
+        if(!renderer) return; const rect = qrAnchor.getBoundingClientRect(); const cardRect = card.getBoundingClientRect();
+        // position canvas over qrAnchor
+        canvas.style.display='block'; canvas.style.zIndex=6; canvas.style.position='absolute';
+        canvas.width = Math.round(rect.width*2); canvas.height = Math.round(rect.height*2);
+        canvas.style.width = rect.width + 'px'; canvas.style.height = rect.height + 'px';
+        canvas.style.left = (rect.left) + 'px'; canvas.style.top = (rect.top) + 'px';
+        renderer.setSize(canvas.width, canvas.height, false);
+        camera.aspect = canvas.width / canvas.height; camera.updateProjectionMatrix();
+      }
+
+      function playQRScan(duration=2500){
+        if(!renderer) setupThree();
+        resize();
+        // appear torus and animate scale & rotation, then pulse
+        const start = performance.now();
+        function frame(t){
+          const e = t - start; const pct = Math.min(e/duration,1);
+          torus.scale.setScalar(0.01 + pct*1.0);
+          torus.rotation.z += 0.035 + pct*0.02;
+          // emissive pulse
+          torus.material.emissiveIntensity = 0.6 + Math.sin(e*0.02)*0.6;
+          renderer.render(scene,camera);
+          if(pct < 1) animId = requestAnimationFrame(frame);
         }
-        geo.setAttribute('position', new THREE.BufferAttribute(pos,3));
-        const mat = new THREE.PointsMaterial({size:0.6,transparent:true,opacity:0.9,depthWrite:false});
-        // color assigned in vertex shader alternative: set single color and tweak in render
-        mat.color = new THREE.Color(0x00ffe1);
-        particles = new THREE.Points(geo,mat);
-        scene.add(particles);
-
-        // scan beam (thin plane with additive transparent material)
-        const beamGeo = new THREE.PlaneGeometry(40,8,1,1);
-        const beamMat = new THREE.MeshBasicMaterial({color:0x00ffd7,transparent:true,opacity:0.0,blending:THREE.AdditiveBlending,depthWrite:false});
-        beam = new THREE.Mesh(beamGeo,beamMat);
-        beam.position.set(0,0,0);
-        beam.rotation.x = -0.3;
-        beam.scale.set(1,0.01,1);
-        scene.add(beam);
-
-        // ring at center
-        const ringGeo = new THREE.RingGeometry(2.5,4.5,64);
-        const ringMat = new THREE.MeshBasicMaterial({color:0x00ffd7,transparent:true,opacity:0.0,side:THREE.DoubleSide,blending:THREE.AdditiveBlending});
-        const ring = new THREE.Mesh(ringGeo,ringMat); ring.rotation.x = -0.4; ring.position.z = -2; scene.add(ring);
-
-        // subtle fog
-        scene.fog = new THREE.FogExp2(0x000000, 0.01);
-
-        window.addEventListener('resize', onResize);
-
-        // animate initial intro timeline manually via startTime
+        animId = requestAnimationFrame(frame);
+        // stop after duration + small linger
+        setTimeout(()=>{ cancelAnimationFrame(animId); canvas.style.display='none'; }, duration+600);
       }
 
-      function onResize(){
-        if(!renderer) return; camera.aspect = window.innerWidth/window.innerHeight; camera.updateProjectionMatrix(); renderer.setSize(window.innerWidth, window.innerHeight);
-      }
+      // expose function
+      window._playQRScan = playQRScan;
+      window.addEventListener('resize', ()=>{ if(renderer) resize(); });
+    })();
 
-      function playAnimation(duration=7000){
-        if(running) return; running=true; overlay.style.display='flex';
-        if(!renderer) initThree();
-        startTime = performance.now();
-        // kickoff render loop
-        requestAnimationFrame(loop);
-        // safety fallback redirect if animation not completed
-        setTimeout(()=>{ if(running) finishAndRedirect(); }, duration+120);
-      }
+    // ---------- Scan button wiring: play botanicals, flip card, play QR search, then redirect ----------
+    (function(){
+      const scanBtn = document.getElementById('scanBtn');
+      const card = document.getElementById('card');
+      const redirect = 'https://pjcompanyofficial.github.io/PJ.COM/';
 
-      function loop(t){
-        if(!running) return;
-        const elapsed = t - startTime;
-        const pct = Math.min(elapsed/7000,1);
-
-        // animate particles rotation and brightness
-        particles.rotation.y = elapsed*0.0006;
-        particles.material.size = 0.6 + Math.sin(elapsed*0.004)*0.35;
-        particles.material.opacity = 0.25 + pct*0.9;
-
-        // beam grows and pulses
-        beam.material.opacity = Math.sin(pct*Math.PI)*0.65;
-        beam.scale.y = 0.01 + Math.sin(elapsed*0.009)*0.2 + pct*0.9;
-        beam.position.y = Math.sin(elapsed*0.006)*6*(1-pct);
-
-        // camera slight dolly
-        camera.position.z = 60 - pct*26;
-        camera.lookAt(0,0,0);
-
-        renderer.render(scene,camera);
-
-        if(pct < 1) requestAnimationFrame(loop);
-        else finishAndRedirect();
-      }
-
-      function finishAndRedirect(){
-        running=false;
-        // fade out overlay smoothly then redirect
-        overlay.style.transition='opacity 650ms ease'; overlay.style.opacity='1';
-        overlay.style.opacity='0';
-        setTimeout(()=>{ overlay.style.display='none'; overlay.style.opacity='1'; window.location.href = redirectUrl; }, 650);
-      }
-
-      // button wiring
-      btn.addEventListener('click', ()=>{
-        playAnimation(7000);
+      scanBtn.addEventListener('click', async ()=>{
+        // 1. animate branches/leaves/flowers (2D feels deep)
+        animateBotanicals();
+        // 2. flip card to back smoothly after short delay
+        setTimeout(()=>{ card.style.transform = 'rotateX(6deg) rotateY(180deg)'; }, 700);
+        // 3. after card back visible, play QR 3D search at anchor
+        setTimeout(()=>{ try{ window._playQRScan(2800); }catch(e){} }, 1500);
+        // 4. keep flowers popping with subtle 3D tilt
+        setTimeout(()=>{ document.getElementById('f1').style.transform += ' translateZ(8px)'; document.getElementById('f2').style.transform += ' translateZ(6px)'; }, 1600);
+        // 5. after 7s total, redirect
+        setTimeout(()=>{ window.location.href = redirect; }, 7000);
       });
 
-      // accessible keyboard trigger
-      btn.addEventListener('keyup', e=>{ if(e.key === 'Enter' || e.key === ' ') playAnimation(7000); });
-
-      // fallback if WebGL not available: show simple CSS effect then redirect
-      if(!THREE.WEBGL || !THREE.WEBGL.isWebGLAvailable()){
-        btn.addEventListener('click', ()=>{
-          // CSS fallback
-          const body = document.body; body.style.transition='background 700ms'; body.style.background='#000';
-          setTimeout(()=> window.location.href = redirectUrl, 900);
-        });
-      }
-
+      // keyboard accessibility
+      scanBtn.addEventListener('keyup', e=>{ if(e.key === 'Enter' || e.key === ' ') scanBtn.click(); });
     })();
+
   </script></body>
 </html>
