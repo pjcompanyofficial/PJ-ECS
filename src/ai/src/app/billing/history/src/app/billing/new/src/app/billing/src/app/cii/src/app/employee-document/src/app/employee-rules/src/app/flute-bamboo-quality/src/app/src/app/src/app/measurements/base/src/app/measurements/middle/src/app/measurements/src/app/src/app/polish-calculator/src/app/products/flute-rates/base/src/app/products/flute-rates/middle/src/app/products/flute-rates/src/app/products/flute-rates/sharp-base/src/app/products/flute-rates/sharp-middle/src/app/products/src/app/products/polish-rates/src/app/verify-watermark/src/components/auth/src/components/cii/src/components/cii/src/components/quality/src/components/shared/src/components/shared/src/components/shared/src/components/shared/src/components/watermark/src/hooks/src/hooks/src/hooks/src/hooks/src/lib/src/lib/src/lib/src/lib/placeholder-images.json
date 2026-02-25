@@ -1,0 +1,82 @@
+{
+  "placeholderImages": [
+    {
+      "id": "body-watermark",
+      "description": "Circular greyscale watermark for body background",
+      "imageUrl": "https://i.postimg.cc/0QHnqDC4/1771519114070.jpg",
+      "imageHint": "logo abstract"
+    },
+    {
+      "id": "bill-watermark",
+      "description": "Watermark for generated bills",
+      "imageUrl": "https://i.postimg.cc/L8vWhY4Y/Screenshot-20260221-204626-Photos-and-videos.png",
+      "imageHint": "logo official"
+    },
+    {
+      "id": "employee-document",
+      "description": "Image of an employee document",
+      "imageUrl": "https://i.postimg.cc/kGn8V4gJ/Screenshot-20260221-205009-Photos-and-videos.png",
+      "imageHint": "document paper"
+    },
+    {
+      "id": "owner-signature",
+      "description": "Digital signature of the owner",
+      "imageUrl": "https://i.postimg.cc/bJHgFrC5/file-00000000005c72099d46cf69aa1ebc2c-(1).png",
+      "imageHint": "signature script"
+    },
+    {
+      "id": "company-logo",
+      "description": "The official company logo",
+      "imageUrl": "https://i.postimg.cc/W4KcbWsP/Screenshot-20260221-212958-Gallery.png",
+      "imageHint": "logo brand"
+    },
+    {
+      "id": "pj-ecc-seal",
+      "description": "The official PJ-ECC seal",
+      "imageUrl": "https://i.postimg.cc/BZRbwpF7/1771677047110.jpg",
+      "imageHint": "seal stamp"
+    },
+    {
+      "id": "official-watermark",
+      "description": "The official company watermark image",
+      "imageUrl": "https://i.postimg.cc/L8vWhY4Y/Screenshot-20260221-204626-Photos-and-videos.png",
+      "imageHint": "logo watermark"
+    },
+    {
+      "id": "store-qr-code",
+      "description": "QR code for the store",
+      "imageUrl": "https://i.postimg.cc/13kKmwbd/Screenshot-20260221-213437-Gallery.png",
+      "imageHint": "qr code"
+    },
+    {
+      "id": "approval-1",
+      "description": "Approval image 1",
+      "imageUrl": "https://i.postimg.cc/Dzfj12pF/file-00000000005c72099d46cf69aa1ebc2c.png",
+      "imageHint": "signature official"
+    },
+    {
+      "id": "approval-2",
+      "description": "Approval image 2",
+      "imageUrl": "https://i.postimg.cc/63kFrkGg/file-00000000841c71fab26ed8e9bbeff027.png",
+      "imageHint": "document seal"
+    },
+    {
+      "id": "approval-3",
+      "description": "Approval image 3",
+      "imageUrl": "https://i.postimg.cc/52rgQwvc/Screenshot-20260221-201134-Photos-and-videos.png",
+      "imageHint": "person portrait"
+    },
+    {
+      "id": "approval-4",
+      "description": "Approval image 4",
+      "imageUrl": "https://i.postimg.cc/DyqRKCRc/Screenshot-20260221-201201-Photos-and-videos.png",
+      "imageHint": "person photo"
+    },
+    {
+      "id": "approval-5",
+      "description": "Approval image 5",
+      "imageUrl": "https://i.postimg.cc/gJmZxJgM/1771677047110.jpg",
+      "imageHint": "stamp official"
+    }
+  ]
+}
